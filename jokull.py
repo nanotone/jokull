@@ -6,8 +6,8 @@ import time
 import boto.glacier.layer2
 
 aws_params = {
-    'aws_access_key_id': 'AKIAJM2CMARNBGAXPQEQ',
-    'aws_secret_access_key': '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',
+    'aws_access_key_id': os.environ['AWS_ACCESS'],
+    'aws_secret_access_key': os.environ['AWS_SECRET'],
 }
 
 class IndexedVault(object):
