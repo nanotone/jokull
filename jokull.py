@@ -15,7 +15,9 @@ class IndexedVault(object):
         self.jokull = jokull
         self.vault = vault
 
-    def upload_archive(self, path, desc):
+    def upload_archive(self, path, desc=None):
+        if not desc:
+            desc = "archive of '%s' in '%s'" % (path, self.vault.name)
         record = {
             'desc': desc,
             'path': path,
@@ -64,10 +66,9 @@ if __name__ == '__main__':
     parser.add_argument('path')
     parser.add_argument('vault')
     parser.add_argument('--index', default='index.json')
-    parser.add_argument('--desc', default='')
+    parser.add_argument('--desc')
     args = parser.parse_args()
-    desc = args.desc or "archive of '%s' in '%s'" % (args.path, args.vault)
 
     jokull = Jokull(args.index)
     vault = jokull.get_vault(args.vault)
-    vault.upload_archive(args.path, desc)
+    vault.upload_archive(args.path, args.desc)
