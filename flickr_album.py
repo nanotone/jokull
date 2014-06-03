@@ -1,4 +1,5 @@
 import os
+import urllib2
 
 import flickr_api
 
@@ -23,8 +24,18 @@ def save_photoset(photoset):
     photos = photoset.getPhotos()
     for (i, photo) in enumerate(photos):
         path = '%s/%s.jpg' % (photoset.title, photo.title)
-        print "Saving %s (%d of %d)" % (path, i+1, len(photos))
-        photo.save(path)
+        for retry in range(3):
+            verb = "Saving" if not retry else "Retrying"
+            print "%s %s (%d of %d)" % (verb, path, i+1, len(photos))
+            try:
+                photo.save(path)
+                break
+            except urllib2.HTTPError as e:
+                if e.getcode() != 504:
+                    raise
+            except urllib2.URLError as e:
+                if e.reason.errno != 110:  # connection timed out
+                    raise
 
 if __name__ == '__main__':
     import argparse
