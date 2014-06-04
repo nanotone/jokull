@@ -15,7 +15,14 @@ class IndexedVault(object):
         self.jokull = jokull
         self.vault = vault
 
+    def request_inventory(self):
+        if any(j.action == 'InventoryRetrieval' for j in self.vault.list_jobs(completed=False)):
+            raise RuntimeError("There is already a pending job for inventory retrieval")
+        self.vault.retrieve_inventory()
+
     def upload_archive(self, path, desc=None):
+        if not self.jokull.index:
+            raise RuntimeError("Index file is required for uploads")
         if not desc:
             desc = "archive of '%s' in '%s'" % (path, self.vault.name)
         record = {
@@ -36,9 +43,11 @@ class IndexedVault(object):
 class Jokull(object):
     def __init__(self, indexpath):
         self.indexpath = indexpath
-        with open(indexpath) as fp:
-            self.index = json.load(fp)
-            assert isinstance(self.index, dict)
+        self.index = None
+        if self.indexpath:
+            with open(indexpath) as fp:
+                self.index = json.load(fp)
+                assert isinstance(self.index, dict)
         api = boto.glacier.layer2.Layer2(**aws_params)
         self.vaults = api.list_vaults()
 

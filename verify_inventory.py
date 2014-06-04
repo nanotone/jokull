@@ -10,11 +10,13 @@ def verify_inventory(job_output, index):
     local_hash = {a['archive_id']: a for a in index[vaultname]}
     remote_hash = {a['ArchiveId']: a for a in job_output['ArchiveList']}
     for rec in local_hash.itervalues():
-        if rec['end'] + 36000 < inventory_time:  # give it 10 hours or so?
-            remote_rec = remote_hash.get(rec['archive_id'])
-            assert remote_rec, "Index record %r is missing from inventory" % rec
-            assert rec['size'] == remote_rec['Size'], "Index record %r differs in size from inventory record %r" % (rec, remote_rec)
-            assert -300 < rec['end'] - parse_8601(remote_rec['CreationDate']) < 300, "Index record %r differs in timestamp from inventory record %r" % (rec, remote_rec)
+        if rec['end'] + 25200 > inventory_time:  # give it 7 hours or so?
+            print "Skipping recent archive", rec['archive_id']
+            continue
+        remote_rec = remote_hash.get(rec['archive_id'])
+        assert remote_rec, "Index record %r is missing from inventory" % rec
+        assert rec['size'] == remote_rec['Size'], "Index record %r differs in size from inventory record %r" % (rec, remote_rec)
+        assert -300 < rec['end'] - parse_8601(remote_rec['CreationDate']) < 300, "Index record %r differs in timestamp from inventory record %r" % (rec, remote_rec)
     for remote_id in remote_hash:
         assert remote_id in local_hash, "Inventory record %r is missing from index!" % remote_hash[remote_id]
     print "OK"
