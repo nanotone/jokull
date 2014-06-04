@@ -5,6 +5,8 @@ import time
 
 import boto.glacier.layer2
 
+import util
+
 aws_params = {
     'aws_access_key_id': os.environ['AWS_ACCESS'],
     'aws_secret_access_key': os.environ['AWS_SECRET'],
@@ -19,6 +21,15 @@ class IndexedVault(object):
         if any(j.action == 'InventoryRetrieval' for j in self.vault.list_jobs(completed=False)):
             raise RuntimeError("There is already a pending job for inventory retrieval")
         self.vault.retrieve_inventory()
+
+    def get_last_inventory_job(self):
+        jobs = sorted((j for j in self.vault.list_jobs(completed=True) if j.action == 'InventoryRetrieval'),
+                      key=lambda j: j.completion_date)
+        if not jobs:
+            raise IndexError("There are no completed jobs for inventory retrieval")
+        job = jobs[-1]
+        print "Using inventory job completed at %s (%.1f hours ago)" % (job.completion_date, util.hours_ago(job.completion_date))
+        return job
 
     def upload_archive(self, path, desc=None):
         if not self.jokull.index:
